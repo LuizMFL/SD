@@ -2,7 +2,11 @@ import pika
 import uuid
 import ast
 from threading import Thread, Lock
-from time import sleep
+import keyboard
+import string
+import sys
+import os
+
 
 class RpcClient(object):
 
@@ -14,28 +18,40 @@ class RpcClient(object):
 
         result = self.channel.queue_declare(queue='', exclusive=True)
         self.callback_queue = result.method.queue
-
-        self.internal_lock = Lock()
-        self.corr_id = str(uuid.uuid4())
-        thread = Thread(target=self.call)
-        thread2 = Thread(target=self.process_data)
-        thread.setDaemon(True)
-        thread2.setDaemon(True)
-        thread.start()
-        thread2.start()
-        thread.join()
-        
-        
-    def process_data(self):
         self.channel.basic_consume(
             queue=self.callback_queue,
             on_message_callback=self.on_response,
             auto_ack=True)
+        self.internal_lock = Lock()
+        self.corr_id = str(uuid.uuid4())
+        self.cabou = False
+        self.thread1 = Thread(target=self.call)
+        self.thread2 = Thread(target=self.process_data)
+        self.thread3 = Thread(target=self.keyboard_exception)
+        #self.thread2.setDaemon(True)
+        #self.thread1.setDaemon(True)
+        self.thread2.start()
+        self.thread1.start()
+        self.thread3.start()
+        # self.call()
+        self.thread1.join()
+        self.thread2.join()
+
+    
+    def keyboard_exception(self):
+        keyboard.wait('ctrl')
+        keyboard.wait('c')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
+
+    def process_data(self):
         while True:
             with self.internal_lock:
                 self.connection.process_data_events()
-                sleep(0.1)
-            
+
+        
     def on_response(self, ch, method, props, body):
         if self.corr_id == props.correlation_id:
             body = body.decode('utf-8')
@@ -70,7 +86,6 @@ class RpcClient(object):
                         correlation_id=self.corr_id,
                     ),
                     body=str(body))
-
 
 if __name__ == '__main__':
     RpcClient()
