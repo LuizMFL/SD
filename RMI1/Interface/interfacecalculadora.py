@@ -2,16 +2,16 @@ import abc
 
 class InterfaceCalculadora(abc.ABCMeta):
     @abc.abstractmethod
-    def somar(self, x:float, y:float):
+    def sum(self, x:float, y:float):
         raise NotImplementedError
     @abc.abstractmethod
-    def subtrair(self, x:float, y:float):
+    def sub(self, x:float, y:float):
         raise NotImplementedError
     @abc.abstractmethod
-    def multiplicar(self, x:float, y:float):
+    def mult(self, x:float, y:float):
         raise NotImplementedError
     @abc.abstractmethod
-    def dividir(self, x:float, y:float):
+    def div(self, x:float, y:float):
         raise NotImplementedError
     @abc.abstractmethod
     def loge(self, x:float):
